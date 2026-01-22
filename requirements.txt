@@ -23,7 +23,6 @@ antlr4-python3-runtime==4.9.2
 anyio==4.11.0
 apispec==6.9.0
 apispec-webframeworks==0.5.2
-apt-listchanges==4.8
 arc4==0.3.0
 argcomplete==3.6.3
 argon2-cffi==25.1.0
