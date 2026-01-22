@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta de Precios DOREMI</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, #6a1b9a, #8e24aa);
+    color: white;
+    text-align: center;
+}
+.header { padding: 20px; }
+.logo img { max-width: 220px; }
+.card {
+    background: rgba(255,255,255,0.15);
+    border-radius: 20px;
+    margin: 20px;
+    padding: 25px;
+}
+input, button {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    border-radius: 12px;
+    border: none;
+    margin-top: 12px;
+}
+button {
+    background: linear-gradient(90deg, #ff4081, #f50057);
+    color: white;
+    font-weight: bold;
+}
+video {
+    width: 100%;
+    margin-top: 15px;
+    border-radius: 12px;
+}
+.producto { margin-top: 20px; font-size: 22px; }
+.precio { margin-top: 10px; font-size: 42px; font-weight: bold; color: #ffeb3b; }
+</style>
+</head>
+
+<body onclick="saludoInicial()">
+
+<div class="header">
+    <div class="logo">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>DoReMi – Consulta de Precios</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    header {
+      background: #0a7cff;
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .card {
+      background: white;
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 400px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      width: 95%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 10px;
+      background: #0a7cff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #reader {
+      margin-top: 15px;
+    }
+
+    .producto {
+      font-size: 18px;
+      margin-top: 15px;
+    }
+
+    .precio {
+      font-size: 26px;
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>DoReMi – Consulta de Precios</header>
+
+<div class="card">
+
+  <input
+    id="codigoManual"
+    placeholder="Ingrese código del producto"
+  >
+
+  <button onclick="consultarManual()">Consultar</button>
+
+  <button onclick="iniciarEscaneo()">📷 Escanear código</button>
+
+  <div id="reader"></div>
+
+  <div class="producto" id="producto"></div>
+  <div class="precio" id="precio"></div>
+
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+let scanner = null;
+
+function consultarManual() {
+  const codigo = document.getElementById("codigoManual").value;
+
+  fetch(`/consultar/${codigo}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        document.getElementById("producto").innerText = "Producto no registrado";
+        document.getElementById("precio").innerText = "";
+        hablar("Producto no registrado");
+      } else {
+        document.getElementById("producto").innerText = data.nombre;
+        document.getElementById("precio").innerText = "$" + data.precio;
+        hablar("El precio es " + data.precio + " pesos");
+      }
+    });
+}
+
+function iniciarEscaneo() {
+  document.getElementById("reader").innerHTML = "";
+
+  scanner = new Html5Qrcode("reader");
+
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 150 } },
+    (codigo) => {
+      scanner.stop();
+      document.getElementById("codigoManual").value = codigo;
+      consultarManual();
+    }
+  );
+}
+
+function hablar(texto) {
+  const voz = new SpeechSynthesisUtterance(texto);
+  voz.lang = "es-CL";
+  speechSynthesis.speak(voz);
+}
+</script>
+
+</body>
+</html>

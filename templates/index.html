@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Consulta Precios | DOREMI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #6B2D8F, #8E44AD, #5E2B97);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #FFFFFF;
+    }
+
+    .app {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(6px);
+      width: 100%;
+      max-width: 420px;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    }
+
+    header {
+      background: #6B2D8F;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    header img {
+      height: 95px;
+    }
+
+    main {
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-weight: normal;
+      font-size: 22px;
+    }
+
+    input {
+      width: 90%;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      margin-top: 18px;
+    }
+
+    button {
+      margin-top: 22px;
+      width: 90%;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 14px;
+      border: none;
+      background: #C83A8A;
+      color: #FFFFFF;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #reader {
+      margin: 20px auto 0;
+      width: 90%;
+      max-width: 320px;
+      display: none;
+    }
+
+    #resultado {
+      margin-top: 32px;
+    }
+
+    .nombre {
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .precio {
+      font-size: 44px;
+      font-weight: bold;
+      color: #FFD24A;
+    }
+
+    .footer {
+      margin-top: 26px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <header>
+    <img src="/static/logo_doremi.png" alt="DOREMI">
+  </header>
+
+  <main>
+    <h2>Consulta de precios</h2>
+
+    <input
+      id="codigo"
+      type="text"
+      placeholder="Ingrese código de barras"
+      autocomplete="off"
+    >
+
+    <button onclick="consultarPrecio()">Consultar</button>
+
+    <button onclick="iniciarEscaneo()">📷 Escanear código</button>
+
+    <div id="reader"></div>
+
+    <div id="resultado"></div>
+
+    <div class="footer">
+      DOREMI · New Retail Concept
+    </div>
+  </main>
+
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+/* ===== SALUDO DE BIENVENIDA ===== */
+let saludoDado = false;
+
+document.body.addEventListener("click", () => {
+  if (saludoDado) return;
+
+  const saludo = new SpeechSynthesisUtterance(
+    "Bienvenido a Tiendas Doremi"
+  );
+  saludo.lang = "es-CL";
+  saludo.rate = 0.9;
+  speechSynthesis.speak(saludo);
+
+  saludoDado = true;
+}, { once: true });
+
+/* ===== CONSULTA PRECIO ===== */
+function consultarPrecio() {
+  const codigo = document.getElementById("codigo").value.trim();
+  const resultado = document.getElementById("resultado");
+
+  if (!codigo) {
+    resultado.innerHTML =
+      "<div class='nombre'>Ingrese un código válido</div>";
+    return;
+  }
+
+  fetch("/ver_precio", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ codigo })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) {
+      resultado.innerHTML =
+        "<div class='nombre'>" + data.error + "</div>";
+      return;
+    }
+
+    const precioNumerico = parseInt(data.precio, 10);
+    const precioFormateado =
+      precioNumerico.toLocaleString("es-CL");
+
+    resultado.innerHTML = `
+      <div class="nombre">${data.nombre}</div>
+      <div class="precio">$ ${precioFormateado}</div>
+    `;
+
+    const voz = new SpeechSynthesisUtterance(
+      "El precio de " + data.nombre +
+      " es " + precioFormateado + " pesos"
+    );
+    voz.lang = "es-CL";
+    voz.rate = 0.9;
+    speechSynthesis.speak(voz);
+  })
+  .catch(() => {
+    resultado.innerHTML =
+      "<div class='nombre'>Error de conexión</div>";
+  });
+}
+
+/* ===== ESCÁNER DE CÁMARA ===== */
+let scanner = null;
+
+function iniciarEscaneo() {
+  const reader = document.getElementById("reader");
+  reader.style.display = "block";
+  reader.innerHTML = "";
+
+  scanner = new Html5Qrcode("reader");
+
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 150 } },
+    (codigo) => {
+      scanner.stop();
+      reader.style.display = "none";
+      document.getElementById("codigo").value = codigo;
+      consultarPrecio();
+    }
+  );
+}
+</script>
+
+</body>
+</html>
